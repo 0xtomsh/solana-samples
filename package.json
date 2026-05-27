@@ -1,0 +1,27 @@
+{
+  "name": "solana-samples",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Public monorepo for Solana sample apps.",
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "dev:swc": "pnpm --filter solana-wallet-connection dev",
+    "build:swc": "pnpm --filter solana-wallet-connection build",
+    "typecheck:swc": "pnpm --filter solana-wallet-connection typecheck",
+    "dev:rth": "pnpm --filter react-solana-transaction-history dev",
+    "build:rth": "pnpm --filter react-solana-transaction-history build",
+    "typecheck:rth": "pnpm --filter react-solana-transaction-history typecheck",
+    "dev:nts": "pnpm --filter nextjs-token-swap dev",
+    "build:nts": "pnpm --filter nextjs-token-swap build",
+    "typecheck:nts": "pnpm --filter nextjs-token-swap typecheck",
+    "dev:nft": "pnpm --filter nextjs-nft-viewer dev",
+    "build:nft": "pnpm --filter nextjs-nft-viewer build",
+    "typecheck:nft": "pnpm --filter nextjs-nft-viewer typecheck",
+    "dev:down": "for port in 3000 3001 3002 3003 4173 5173 5174; do pids=$(lsof -ti tcp:$port); if [ -n \"$pids\" ]; then kill $pids && echo \"stopped :$port\"; fi; done"
+  },
+  "devDependencies": {
+    "next": "^16.2.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  }
+}

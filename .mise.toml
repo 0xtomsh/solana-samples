@@ -1,0 +1,26 @@
+[tools]
+node = "24.15.0"
+pnpm = "10.11.0"
+
+[env]
+GITHUB_USER = "0xtomsh"
+GIT_AUTHOR_NAME = "0xtomsh"
+GIT_COMMITTER_NAME = "0xtomsh"
+GIT_AUTHOR_EMAIL = "shiotomo.nft@gmail.com"
+GIT_COMMITTER_EMAIL = "shiotomo.nft@gmail.com"
+
+[tasks.install]
+description = "Install workspace dependencies"
+run = "pnpm install"
+
+[tasks.dev]
+description = "Start the default app"
+run = "pnpm dev"
+
+[tasks.build]
+description = "Build the default app"
+run = "pnpm build"
+
+[tasks.typecheck]
+description = "Run TypeScript checks"
+run = "pnpm typecheck"

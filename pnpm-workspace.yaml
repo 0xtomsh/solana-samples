@@ -1,0 +1,5 @@
+packages:
+  - "solana-wallet-connection"
+  - "react-solana-transaction-history"
+  - "nextjs-token-swap"
+  - "nextjs-nft-viewer"
