@@ -14,7 +14,7 @@
     "dev:nts": "pnpm --filter nextjs-token-swap dev",
     "build:nts": "pnpm --filter nextjs-token-swap build",
     "typecheck:nts": "pnpm --filter nextjs-token-swap typecheck",
-    "devnv": "pnpm --filter nextjs-nft-viewer dev",
+    "dev:nnv": "pnpm --filter nextjs-nft-viewer dev",
     "build:nnv": "pnpm --filter nextjs-nft-viewer build",
     "typecheck:nnv": "pnpm --filter nextjs-nft-viewer typecheck",
     "dev:down": "for port in 3000 3001 3002 3003 4173 5173 5174; do pids=$(lsof -ti tcp:$port); if [ -n \"$pids\" ]; then kill $pids && echo \"stopped :$port\"; fi; done"

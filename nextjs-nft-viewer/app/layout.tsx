@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Next.js NFT Viewer",
-  description: "A Solana devnet NFT viewer built with Next.js.",
+  title: "Multi-chain NFT Viewer",
+  description: "A multi-chain wallet NFT viewer powered by Alchemy.",
 };
 
 export default function RootLayout({

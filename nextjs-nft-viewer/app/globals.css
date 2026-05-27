@@ -2,8 +2,8 @@
 @import "tailwindcss";
 
 :root {
-  color: #111827;
-  background: #f7fafc;
+  color: #ffffff;
+  background: #0d0f0f;
 }
 
 * {
@@ -14,11 +14,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background:
-    linear-gradient(120deg, rgba(255, 255, 255, 0.92), rgba(240, 249, 255, 0.78)),
-    radial-gradient(circle at 18% 16%, rgba(20, 184, 166, 0.2), transparent 30%),
-    radial-gradient(circle at 78% 10%, rgba(244, 114, 182, 0.18), transparent 28%),
-    linear-gradient(135deg, #f8fafc 0%, #edf7f6 52%, #fff7ed 100%);
+  background: #0d0f0f;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -29,19 +25,26 @@ select {
 }
 
 .wallet-adapter-button-trigger {
-  height: 44px;
+  height: 48px;
+  width: 100%;
+  justify-content: center;
   border-radius: 6px;
-  background: linear-gradient(135deg, #0f766e, #2563eb);
+  background: #1748ff;
   color: #ffffff;
   font-weight: 900;
   line-height: 1;
-  box-shadow: 0 12px 28px rgba(15, 118, 110, 0.24);
+  box-shadow: 0 16px 32px rgba(23, 72, 255, 0.24);
 }
 
 .wallet-adapter-button-trigger:not([disabled]):hover {
-  background: linear-gradient(135deg, #0d9488, #1d4ed8);
+  background: #2d5dff;
 }
 
 .wallet-adapter-modal-wrapper {
   border-radius: 8px;
+}
+
+.solana-wallet-button .wallet-adapter-dropdown,
+.solana-wallet-button .wallet-adapter-button {
+  width: 100%;
 }
