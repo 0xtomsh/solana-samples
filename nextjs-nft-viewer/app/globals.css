@@ -44,6 +44,10 @@ select {
   border-radius: 8px;
 }
 
+.wallet-adapter-modal {
+  z-index: 1000;
+}
+
 .solana-wallet-button .wallet-adapter-dropdown,
 .solana-wallet-button .wallet-adapter-button {
   width: 100%;

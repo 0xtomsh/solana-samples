@@ -275,8 +275,10 @@ export function NftViewer() {
                 connectEvmWallet={connectEvmWallet}
                 manualEvmAddress={manualEvmAddress}
                 manualSolanaAddress={manualSolanaAddress}
+                message={message}
                 onManualEvmAddress={setManualEvmAddress}
                 onManualSolanaAddress={setManualSolanaAddress}
+                state={state}
               />
             </div>
           </div>
@@ -420,8 +422,10 @@ export function NftViewer() {
               connectEvmWallet={connectEvmWallet}
               manualEvmAddress={manualEvmAddress}
               manualSolanaAddress={manualSolanaAddress}
+              message={message}
               onManualEvmAddress={setManualEvmAddress}
               onManualSolanaAddress={setManualSolanaAddress}
+              state={state}
             />
           ) : viewMode === "detail" && selectedItem ? (
             <DetailPanel item={selectedItem} />
@@ -503,14 +507,18 @@ function ConnectPanel({
   connectEvmWallet,
   manualEvmAddress,
   manualSolanaAddress,
+  message,
   onManualEvmAddress,
   onManualSolanaAddress,
+  state,
 }: {
   connectEvmWallet: () => void;
   manualEvmAddress: string;
   manualSolanaAddress: string;
+  message: string;
   onManualEvmAddress: (value: string) => void;
   onManualSolanaAddress: (value: string) => void;
+  state: LoadState;
 }) {
   return (
     <div className="rounded-lg border border-white/10 bg-[#080c10] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
@@ -518,6 +526,15 @@ function ConnectPanel({
       <p className="mt-2 text-sm leading-6 text-slate-400">
         Connect EVM and Solana wallets, or inspect public owner addresses directly.
       </p>
+      <div
+        className={`mt-4 rounded-lg border px-3 py-2 text-sm font-bold leading-6 ${
+          state === "error"
+            ? "border-red-400/30 bg-red-500/10 text-red-200"
+            : "border-white/10 bg-white/[0.04] text-slate-300"
+        }`}
+      >
+        {message}
+      </div>
       <div className="mt-5 grid gap-3">
         <button
           type="button"
