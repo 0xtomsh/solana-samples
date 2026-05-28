@@ -52,3 +52,10 @@ select {
 .solana-wallet-button .wallet-adapter-button {
   width: 100%;
 }
+
+.wallet-inline-button .wallet-adapter-button-trigger {
+  height: 40px;
+  min-width: 112px;
+  padding-inline: 12px;
+  font-size: 0.875rem;
+}

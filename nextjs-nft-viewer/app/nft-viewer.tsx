@@ -5,12 +5,10 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ChangeEvent,
 } from "react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useWallet } from "@solana/wallet-adapter-react";
 import {
-  ArrowDownAZ,
   ArrowUpDown,
   BadgeCheck,
   ChevronRight,
@@ -339,22 +337,31 @@ export function NftViewer() {
             </div>
           </header>
 
-          <section className="grid grid-cols-[1fr_auto] items-end gap-4 px-6 py-5 max-lg:grid-cols-1">
-            <div className="grid grid-cols-2 gap-3 max-lg:grid-cols-1">
-              <WalletCard
-                label="EVM wallet"
-                value={activeEvmAddress}
-                fallback="Connect MetaMask or paste an address"
-                accent="lime"
-                onCopy={copyAddress}
-              />
-              <WalletCard
-                label="Solana wallet"
-                value={activeSolanaAddress}
-                fallback="Connect Phantom/Solflare or paste an address"
-                accent="blue"
-                onCopy={copyAddress}
-              />
+          <section className="px-6 py-5">
+            <WalletManager
+              activeEvmAddress={activeEvmAddress}
+              activeSolanaAddress={activeSolanaAddress}
+              connectEvmWallet={connectEvmWallet}
+              evmAddress={evmAddress}
+              isConnectingEvm={isConnectingEvm}
+              manualEvmAddress={manualEvmAddress}
+              manualSolanaAddress={manualSolanaAddress}
+              onCopy={copyAddress}
+              onManualEvmAddress={setManualEvmAddress}
+              onManualSolanaAddress={setManualSolanaAddress}
+              solanaAddress={solanaAddress}
+            />
+          </section>
+
+          <section className="grid grid-cols-[1fr_auto] items-center gap-4 px-6 pb-5 max-lg:grid-cols-1">
+            <div
+              className={`rounded-lg border px-4 py-3 text-sm font-bold leading-6 ${
+                state === "error"
+                  ? "border-red-400/30 bg-red-500/10 text-red-200"
+                  : "border-white/10 bg-white/[0.04] text-slate-300"
+              }`}
+            >
+              {message}
             </div>
             <button
               type="button"
@@ -420,16 +427,7 @@ export function NftViewer() {
           </section>
 
           {viewMode === "dashboard" ? (
-            <DashboardPanel
-              connectEvmWallet={connectEvmWallet}
-              isConnectingEvm={isConnectingEvm}
-              manualEvmAddress={manualEvmAddress}
-              manualSolanaAddress={manualSolanaAddress}
-              message={message}
-              onManualEvmAddress={setManualEvmAddress}
-              onManualSolanaAddress={setManualSolanaAddress}
-              state={state}
-            />
+            <DashboardPanel />
           ) : viewMode === "detail" && selectedItem ? (
             <DetailPanel item={selectedItem} />
           ) : (
@@ -506,84 +504,13 @@ export function NftViewer() {
   );
 }
 
-function ConnectPanel({
-  connectEvmWallet,
-  isConnectingEvm,
-  manualEvmAddress,
-  manualSolanaAddress,
-  message,
-  onManualEvmAddress,
-  onManualSolanaAddress,
-  state,
-}: {
-  connectEvmWallet: () => void;
-  isConnectingEvm: boolean;
-  manualEvmAddress: string;
-  manualSolanaAddress: string;
-  message: string;
-  onManualEvmAddress: (value: string) => void;
-  onManualSolanaAddress: (value: string) => void;
-  state: LoadState;
-}) {
+function DashboardPanel() {
   return (
-    <div className="rounded-lg border border-white/10 bg-[#080c10] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
-      <h2 className="text-2xl font-black">Connect wallets</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-400">
-        Connect EVM and Solana wallets, or inspect public owner addresses directly.
-      </p>
-      <div
-        className={`mt-4 rounded-lg border px-3 py-2 text-sm font-bold leading-6 ${
-          state === "error"
-            ? "border-red-400/30 bg-red-500/10 text-red-200"
-            : "border-white/10 bg-white/[0.04] text-slate-300"
-        }`}
-      >
-        {message}
-      </div>
-      <div className="mt-5 grid gap-3">
-        <button
-          type="button"
-          onClick={connectEvmWallet}
-          disabled={isConnectingEvm}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#a7ff10] px-4 font-black text-black transition hover:bg-white"
-        >
-          {isConnectingEvm ? (
-            <Loader2 className="animate-spin" size={18} />
-          ) : (
-            <Wallet size={18} />
-          )}
-          {isConnectingEvm ? "Checking wallet..." : "Connect EVM"}
-        </button>
-        <div className="solana-wallet-button">
-          <WalletMultiButton />
-        </div>
-      </div>
-      <div className="mt-5 grid gap-3">
-        <AddressInput
-          label="EVM address"
-          value={manualEvmAddress}
-          placeholder="0x..."
-          onChange={onManualEvmAddress}
-        />
-        <AddressInput
-          label="Solana address"
-          value={manualSolanaAddress}
-          placeholder="Paste Solana owner address"
-          onChange={onManualSolanaAddress}
-        />
-      </div>
-    </div>
-  );
-}
-
-function DashboardPanel(props: Parameters<typeof ConnectPanel>[0]) {
-  return (
-    <section className="grid grid-cols-[0.9fr_1.1fr] gap-4 px-6 pb-6 max-lg:grid-cols-1">
-      <ConnectPanel {...props} />
+    <section className="px-6 pb-6">
       <div className="rounded-lg border border-white/10 bg-[#0b1015] p-5">
         <p className="text-xs font-black uppercase text-[#a7ff10]">Workflow</p>
         <h2 className="mt-2 text-3xl font-black">Unified NFT inventory</h2>
-        <div className="mt-5 grid gap-3">
+        <div className="mt-5 grid grid-cols-3 gap-3 max-lg:grid-cols-1">
           {[
             "Connect EVM and Solana wallets.",
             "Load live NFTs through Alchemy API routes.",
@@ -758,42 +685,162 @@ function DetailPanel({ item }: { item: UnifiedNft }) {
   );
 }
 
-function WalletCard({
-  label,
-  value,
-  fallback,
-  accent,
+function WalletManager({
+  activeEvmAddress,
+  activeSolanaAddress,
+  connectEvmWallet,
+  evmAddress,
+  isConnectingEvm,
+  manualEvmAddress,
+  manualSolanaAddress,
   onCopy,
+  onManualEvmAddress,
+  onManualSolanaAddress,
+  solanaAddress,
 }: {
-  label: string;
-  value: string;
-  fallback: string;
-  accent: "lime" | "blue";
+  activeEvmAddress: string;
+  activeSolanaAddress: string;
+  connectEvmWallet: () => void;
+  evmAddress: string;
+  isConnectingEvm: boolean;
+  manualEvmAddress: string;
+  manualSolanaAddress: string;
   onCopy: (value: string) => void;
+  onManualEvmAddress: (value: string) => void;
+  onManualSolanaAddress: (value: string) => void;
+  solanaAddress: string;
 }) {
   return (
+    <section className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
+      <WalletAccountCard
+        accent="lime"
+        activeAddress={activeEvmAddress}
+        connectedAddress={evmAddress}
+        connectControl={
+          <button
+            type="button"
+            onClick={connectEvmWallet}
+            disabled={isConnectingEvm}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#a7ff10] px-3 text-sm font-black text-black transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isConnectingEvm ? (
+              <Loader2 className="animate-spin" size={16} />
+            ) : (
+              <Wallet size={16} />
+            )}
+            {isConnectingEvm ? "Checking..." : evmAddress ? "Reconnect" : "Connect"}
+          </button>
+        }
+        label="EVM wallet"
+        manualAddress={manualEvmAddress}
+        onCopy={onCopy}
+        onManualAddress={onManualEvmAddress}
+        placeholder="Paste EVM address override"
+      />
+      <WalletAccountCard
+        accent="blue"
+        activeAddress={activeSolanaAddress}
+        connectedAddress={solanaAddress}
+        connectControl={
+          <div className="solana-wallet-button wallet-inline-button">
+            <WalletMultiButton />
+          </div>
+        }
+        label="Solana wallet"
+        manualAddress={manualSolanaAddress}
+        onCopy={onCopy}
+        onManualAddress={onManualSolanaAddress}
+        placeholder="Paste Solana address override"
+      />
+    </section>
+  );
+}
+
+function WalletAccountCard({
+  accent,
+  activeAddress,
+  connectedAddress,
+  connectControl,
+  label,
+  onCopy,
+  manualAddress,
+  onManualAddress,
+  placeholder,
+}: {
+  accent: "lime" | "blue";
+  activeAddress: string;
+  connectedAddress: string;
+  connectControl: React.ReactNode;
+  label: string;
+  manualAddress: string;
+  onCopy: (value: string) => void;
+  onManualAddress: (value: string) => void;
+  placeholder: string;
+}) {
+  const isOverridden = Boolean(manualAddress.trim());
+
+  return (
     <article className="rounded-lg border border-white/10 bg-white/[0.04] p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <p
-          className={`text-xs font-black uppercase ${
-            accent === "lime" ? "text-[#a7ff10]" : "text-[#6d8cff]"
-          }`}
-        >
-          {label}
-        </p>
-        <button
-          type="button"
-          onClick={() => onCopy(value)}
-          disabled={!value}
-          title="Copy address"
-          className="grid h-8 w-8 place-items-center rounded-md border border-white/10 text-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <Copy size={15} />
-        </button>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p
+            className={`text-xs font-black uppercase ${
+              accent === "lime" ? "text-[#a7ff10]" : "text-[#6d8cff]"
+            }`}
+          >
+            {label}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded-md px-2 py-1 text-xs font-black uppercase ${
+                connectedAddress
+                  ? "bg-[#a7ff10] text-black"
+                  : "bg-white/[0.07] text-slate-400"
+              }`}
+            >
+              {connectedAddress ? "Connected" : "Not connected"}
+            </span>
+            {isOverridden ? (
+              <span className="rounded-md bg-[#1748ff] px-2 py-1 text-xs font-black uppercase text-white">
+                Override
+              </span>
+            ) : null}
+          </div>
+        </div>
+        {connectControl}
       </div>
-      <code className="block min-h-10 [overflow-wrap:anywhere] font-mono text-sm leading-5 text-slate-200">
-        {value || fallback}
-      </code>
+
+      <div className="mt-4 rounded-lg bg-black/25 p-3">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-xs font-black uppercase text-slate-500">
+            Active address
+          </p>
+          <button
+            type="button"
+            onClick={() => onCopy(activeAddress)}
+            disabled={!activeAddress}
+            title="Copy address"
+            className="grid h-8 w-8 place-items-center rounded-md border border-white/10 text-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Copy size={15} />
+          </button>
+        </div>
+        <code className="block min-h-10 [overflow-wrap:anywhere] font-mono text-sm leading-5 text-slate-200">
+          {activeAddress || "Connect wallet or paste an override address"}
+        </code>
+      </div>
+
+      <label className="mt-3 block">
+        <span className="mb-2 block text-xs font-black uppercase text-slate-500">
+          View another address
+        </span>
+        <input
+          value={manualAddress}
+          onChange={(event) => onManualAddress(event.target.value)}
+          placeholder={placeholder}
+          className="h-10 w-full rounded-md border border-white/10 bg-black/30 px-3 font-mono text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-[#a7ff10]"
+        />
+      </label>
     </article>
   );
 }
@@ -816,34 +863,6 @@ function Metric({
   );
 }
 
-function AddressInput({
-  label,
-  value,
-  placeholder,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  placeholder: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-xs font-black uppercase text-slate-500">
-        {label}
-      </span>
-      <input
-        value={value}
-        onChange={(event: ChangeEvent<HTMLInputElement>) =>
-          onChange(event.target.value)
-        }
-        placeholder={placeholder}
-        className="h-11 w-full rounded-md border border-white/10 bg-black/30 px-3 font-mono text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-[#a7ff10]"
-      />
-    </label>
-  );
-}
-
 function MetadataRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg bg-white/[0.04] p-3">
@@ -851,39 +870,6 @@ function MetadataRow({ label, value }: { label: string; value: string }) {
       <p className="mt-1 break-all font-mono text-sm text-slate-200">
         {value || "-"}
       </p>
-    </div>
-  );
-}
-
-function PreviewStack() {
-  return (
-    <div className="space-y-3">
-      {[
-        ["Ethereum", "Collectors vault", "#a7ff10"],
-        ["Solana", "Compressed drops", "#1748ff"],
-        ["Base", "Onchain art", "#07090c"],
-      ].map(([chain, title, color]) => (
-        <div
-          key={chain}
-          className="rounded-lg p-5"
-          style={{ backgroundColor: color }}
-        >
-          <p
-            className={`text-xs font-black uppercase ${
-              color === "#07090c" ? "text-white" : "text-black"
-            }`}
-          >
-            {chain}
-          </p>
-          <p
-            className={`mt-2 text-lg font-black ${
-              color === "#07090c" ? "text-white" : "text-black"
-            }`}
-          >
-            {title}
-          </p>
-        </div>
-      ))}
     </div>
   );
 }
