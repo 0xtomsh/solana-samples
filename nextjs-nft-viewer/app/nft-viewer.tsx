@@ -31,6 +31,13 @@ type LoadState = "idle" | "loading" | "ready" | "error";
 type SortMode = "name-asc" | "chain-asc" | "collection-asc";
 type ViewMode = "dashboard" | "gallery" | "detail";
 
+type EvmProvider = {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on?: (event: string, callback: (...args: unknown[]) => void) => void;
+  removeListener?: (event: string, callback: (...args: unknown[]) => void) => void;
+  providers?: EvmProvider[];
+};
+
 type UnifiedNft = {
   id: string;
   chain: ChainId;
@@ -49,11 +56,7 @@ type UnifiedNft = {
 
 declare global {
   interface Window {
-    ethereum?: {
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-      on?: (event: string, callback: (...args: unknown[]) => void) => void;
-      removeListener?: (event: string, callback: (...args: unknown[]) => void) => void;
-    };
+    ethereum?: EvmProvider;
   }
 }
 
@@ -77,17 +80,18 @@ export function NftViewer() {
   const [manualSolanaAddress, setManualSolanaAddress] = useState("");
   const [items, setItems] = useState<UnifiedNft[]>([]);
   const [state, setState] = useState<LoadState>("idle");
-  const [message, setMessage] = useState("Connect a wallet or paste addresses to begin.");
+  const [message, setMessage] = useState("Connect a wallet to open the dashboard.");
   const [query, setQuery] = useState("");
   const [chainFilter, setChainFilter] = useState<ChainId | "all">("all");
   const [sortMode, setSortMode] = useState<SortMode>("collection-asc");
   const [viewMode, setViewMode] = useState<ViewMode>("dashboard");
   const [selectedId, setSelectedId] = useState("");
+  const [isConnectingEvm, setIsConnectingEvm] = useState(false);
 
   const solanaAddress = publicKey?.toBase58() ?? "";
   const activeEvmAddress = manualEvmAddress.trim() || evmAddress;
   const activeSolanaAddress = manualSolanaAddress.trim() || solanaAddress;
-  const hasWallet = Boolean(activeEvmAddress || activeSolanaAddress);
+  const hasConnectedWallet = Boolean(evmAddress || solanaAddress);
   const selectedItem = items.find((item) => item.id === selectedId) ?? items[0];
 
   useEffect(() => {
@@ -164,23 +168,38 @@ export function NftViewer() {
   }, [items]);
 
   const connectEvmWallet = async () => {
-    if (!window.ethereum?.request) {
-      setState("error");
-      setMessage("MetaMask or another EVM wallet was not found in this browser.");
-      return;
-    }
+    setIsConnectingEvm(true);
+    setState("loading");
+    setMessage("Checking for an EVM wallet...");
 
     try {
-      const accounts = await window.ethereum.request({
+      const provider = await getEvmProvider();
+
+      if (!provider) {
+        setState("error");
+        setMessage(
+          "No EVM wallet was detected. Install or unlock MetaMask, Rabby, Coinbase Wallet, or another injected EVM wallet."
+        );
+        return;
+      }
+
+      const accounts = await provider.request({
         method: "eth_requestAccounts",
       });
       if (Array.isArray(accounts) && typeof accounts[0] === "string") {
         setEvmAddress(accounts[0]);
+        setState("ready");
         setMessage("EVM wallet connected.");
+        return;
       }
+
+      setState("error");
+      setMessage("The EVM wallet did not return an account.");
     } catch {
       setState("error");
       setMessage("EVM wallet connection was cancelled or failed.");
+    } finally {
+      setIsConnectingEvm(false);
     }
   };
 
@@ -229,70 +248,53 @@ export function NftViewer() {
     await navigator.clipboard.writeText(value);
   };
 
-  if (!hasWallet) {
+  if (!hasConnectedWallet) {
     return (
-      <main className="min-h-screen bg-[#0d0f0f] p-6 text-white max-md:p-3">
-        <section className="mx-auto grid min-h-[calc(100vh-48px)] w-[min(1180px,100%)] grid-cols-[minmax(0,1fr)_340px] overflow-hidden rounded-lg border border-white/10 bg-[#050808] shadow-[0_28px_90px_rgba(0,0,0,0.62)] max-lg:grid-cols-1">
-          <div className="relative flex min-h-[650px] flex-col justify-between bg-[linear-gradient(145deg,#070b0d_0%,#0a1118_48%,#070808_100%)] p-8 max-md:min-h-[560px] max-md:p-5">
-            <div className="flex items-center justify-between gap-5">
-              <div>
-                <p className="text-xs font-black uppercase leading-4 text-white">
-                  MultiChain
-                  <span className="block text-[#a7ff10]">NFT Viewer</span>
-                </p>
-              </div>
-              <nav className="flex items-center gap-2 rounded-full bg-white/5 p-1 text-xs font-bold text-slate-400 max-md:hidden">
-                <span className="rounded-full bg-[#a7ff10] px-4 py-2 text-black">
-                  Wallets
-                </span>
-                <span className="px-3 py-2">Gallery</span>
-                <span className="px-3 py-2">Metadata</span>
-              </nav>
+      <main className="grid min-h-screen place-items-center bg-[#0d0f0f] p-6 text-white max-md:p-3">
+        <section className="w-[min(520px,100%)] rounded-lg border border-white/10 bg-[#050808] p-6 shadow-[0_28px_90px_rgba(0,0,0,0.62)]">
+          <div className="grid place-items-center text-center">
+            <div className="grid h-20 w-20 place-items-center rounded-lg bg-[#a7ff10] text-black shadow-[0_0_38px_rgba(167,255,16,0.3)]">
+              <Sparkles size={34} />
             </div>
-
-            <div className="grid grid-cols-[minmax(0,0.95fr)_minmax(260px,0.8fr)] items-end gap-8 max-lg:grid-cols-1">
-              <div className="min-h-[440px] overflow-hidden rounded-lg border border-white/10 bg-[#11161a]">
-                <div className="h-full bg-[linear-gradient(135deg,rgba(167,255,16,0.18),transparent_28%),linear-gradient(160deg,#121a21,#050707)] p-7">
-                  <div className="flex h-full flex-col justify-end">
-                    <div className="mb-8 grid h-24 w-24 place-items-center rounded-lg bg-[#a7ff10] text-black shadow-[0_0_38px_rgba(167,255,16,0.3)]">
-                      <Sparkles size={42} />
-                    </div>
-                    <p className="text-sm font-black uppercase text-[#a7ff10]">
-                      Alchemy powered index
-                    </p>
-                    <h1 className="mt-3 max-w-[720px] text-[clamp(3rem,6vw,5.2rem)] font-black leading-[0.9] tracking-normal">
-                      WALLET
-                      <span className="block text-[#a7ff10]">GALLERY</span>
-                    </h1>
-                    <p className="mt-5 max-w-[620px] text-base leading-7 text-slate-300">
-                      Browse Ethereum, Base, Polygon, Arbitrum, Optimism, and Solana NFTs from one dashboard.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <ConnectPanel
-                connectEvmWallet={connectEvmWallet}
-                manualEvmAddress={manualEvmAddress}
-                manualSolanaAddress={manualSolanaAddress}
-                message={message}
-                onManualEvmAddress={setManualEvmAddress}
-                onManualSolanaAddress={setManualSolanaAddress}
-                state={state}
-              />
-            </div>
+            <p className="mt-6 text-xs font-black uppercase text-[#a7ff10]">
+              Multi-chain NFT Viewer
+            </p>
+            <h1 className="mt-3 text-4xl font-black leading-none tracking-normal max-md:text-3xl">
+              Connect wallet
+            </h1>
+            <p className="mt-4 max-w-[380px] text-sm leading-6 text-slate-400">
+              Connect an EVM wallet or a Solana wallet to open the dashboard.
+            </p>
           </div>
 
-          <aside className="flex flex-col justify-between bg-[#15171c] p-6 max-lg:min-h-[420px]">
-            <PreviewStack />
-            <div className="rounded-lg bg-[#a7ff10] p-5 text-black">
-              <p className="text-xs font-black uppercase">Ready for</p>
-              <strong className="mt-2 block text-3xl leading-none">6 chains</strong>
-              <p className="mt-4 text-sm font-bold leading-5">
-                Add `ALCHEMY_API_KEY` to load live NFT data through the app API.
-              </p>
+          <div
+            className={`mt-6 rounded-lg border px-3 py-2 text-center text-sm font-bold leading-6 ${
+              state === "error"
+                ? "border-red-400/30 bg-red-500/10 text-red-200"
+                : "border-white/10 bg-white/[0.04] text-slate-300"
+            }`}
+          >
+            {message}
+          </div>
+
+          <div className="mt-5 grid gap-3">
+            <button
+              type="button"
+              onClick={connectEvmWallet}
+              disabled={isConnectingEvm}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#a7ff10] px-4 font-black text-black transition hover:bg-white"
+            >
+              {isConnectingEvm ? (
+                <Loader2 className="animate-spin" size={18} />
+              ) : (
+                <Wallet size={18} />
+              )}
+              {isConnectingEvm ? "Checking wallet..." : "Connect EVM"}
+            </button>
+            <div className="solana-wallet-button">
+              <WalletMultiButton />
             </div>
-          </aside>
+          </div>
         </section>
       </main>
     );
@@ -420,6 +422,7 @@ export function NftViewer() {
           {viewMode === "dashboard" ? (
             <DashboardPanel
               connectEvmWallet={connectEvmWallet}
+              isConnectingEvm={isConnectingEvm}
               manualEvmAddress={manualEvmAddress}
               manualSolanaAddress={manualSolanaAddress}
               message={message}
@@ -505,6 +508,7 @@ export function NftViewer() {
 
 function ConnectPanel({
   connectEvmWallet,
+  isConnectingEvm,
   manualEvmAddress,
   manualSolanaAddress,
   message,
@@ -513,6 +517,7 @@ function ConnectPanel({
   state,
 }: {
   connectEvmWallet: () => void;
+  isConnectingEvm: boolean;
   manualEvmAddress: string;
   manualSolanaAddress: string;
   message: string;
@@ -539,10 +544,15 @@ function ConnectPanel({
         <button
           type="button"
           onClick={connectEvmWallet}
+          disabled={isConnectingEvm}
           className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#a7ff10] px-4 font-black text-black transition hover:bg-white"
         >
-          <Wallet size={18} />
-          Connect EVM
+          {isConnectingEvm ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : (
+            <Wallet size={18} />
+          )}
+          {isConnectingEvm ? "Checking wallet..." : "Connect EVM"}
         </button>
         <div className="solana-wallet-button">
           <WalletMultiButton />
@@ -888,6 +898,35 @@ async function fetchNfts(chain: ChainId, owner: string) {
   }
 
   return data.items ?? [];
+}
+
+async function getEvmProvider() {
+  if (window.ethereum?.request) {
+    return window.ethereum.providers?.[0] ?? window.ethereum;
+  }
+
+  return new Promise<EvmProvider | null>((resolve) => {
+    let resolved = false;
+
+    const finish = (provider: EvmProvider | null) => {
+      if (resolved) return;
+      resolved = true;
+      window.removeEventListener("eip6963:announceProvider", handleProvider);
+      resolve(provider);
+    };
+
+    const handleProvider = (event: Event) => {
+      const provider = (event as CustomEvent<{ provider?: EvmProvider }>).detail
+        ?.provider;
+      if (provider?.request) {
+        finish(provider);
+      }
+    };
+
+    window.addEventListener("eip6963:announceProvider", handleProvider);
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+    window.setTimeout(() => finish(null), 700);
+  });
 }
 
 function navClass(active: boolean) {
