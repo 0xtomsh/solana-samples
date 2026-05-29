@@ -710,48 +710,97 @@ function WalletManager({
   onManualSolanaAddress: (value: string) => void;
   solanaAddress: string;
 }) {
+  const hasConnectedWallet = Boolean(evmAddress || solanaAddress);
+  const [isExpanded, setIsExpanded] = useState(!hasConnectedWallet);
+
+  useEffect(() => {
+    setIsExpanded(!hasConnectedWallet);
+  }, [hasConnectedWallet]);
+
   return (
-    <section className="grid grid-cols-2 gap-4 max-lg:grid-cols-1">
-      <WalletAccountCard
-        accent="lime"
-        activeAddress={activeEvmAddress}
-        connectedAddress={evmAddress}
-        connectControl={
-          <button
-            type="button"
-            onClick={connectEvmWallet}
-            disabled={isConnectingEvm}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#a7ff10] px-3 text-sm font-black text-black transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isConnectingEvm ? (
-              <Loader2 className="animate-spin" size={16} />
-            ) : (
-              <Wallet size={16} />
-            )}
-            {isConnectingEvm ? "Checking..." : evmAddress ? "Reconnect" : "Connect"}
-          </button>
-        }
-        label="EVM wallet"
-        manualAddress={manualEvmAddress}
-        onCopy={onCopy}
-        onManualAddress={onManualEvmAddress}
-        placeholder="Paste EVM address override"
-      />
-      <WalletAccountCard
-        accent="blue"
-        activeAddress={activeSolanaAddress}
-        connectedAddress={solanaAddress}
-        connectControl={
-          <div className="solana-wallet-button wallet-inline-button">
-            <WalletMultiButton />
+    <section className="rounded-lg border border-white/10 bg-white/[0.035]">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 max-md:flex-col max-md:items-stretch">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-black uppercase text-slate-500">
+              Wallets
+            </p>
+            {evmAddress ? (
+              <span className="rounded-md bg-[#a7ff10] px-2 py-1 text-xs font-black uppercase text-black">
+                EVM connected
+              </span>
+            ) : null}
+            {solanaAddress ? (
+              <span className="rounded-md bg-[#1748ff] px-2 py-1 text-xs font-black uppercase text-white">
+                Solana connected
+              </span>
+            ) : null}
           </div>
-        }
-        label="Solana wallet"
-        manualAddress={manualSolanaAddress}
-        onCopy={onCopy}
-        onManualAddress={onManualSolanaAddress}
-        placeholder="Paste Solana address override"
-      />
+          <p className="mt-2 truncate font-mono text-sm text-slate-300">
+            {[activeEvmAddress, activeSolanaAddress]
+              .filter(Boolean)
+              .map(formatCompactAddress)
+              .join(" / ")}
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-expanded={isExpanded}
+          onClick={() => setIsExpanded((current) => !current)}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-white/10 px-3 text-sm font-black text-slate-200 transition hover:border-white/20 hover:bg-white/[0.06]"
+        >
+          <ChevronRight
+            className={`transition ${isExpanded ? "rotate-90" : ""}`}
+            size={16}
+          />
+          {isExpanded ? "Hide wallets" : "Show wallets"}
+        </button>
+      </div>
+
+      {isExpanded ? (
+        <div className="grid grid-cols-2 gap-4 border-t border-white/10 p-4 max-lg:grid-cols-1">
+          <WalletAccountCard
+            accent="lime"
+            activeAddress={activeEvmAddress}
+            connectedAddress={evmAddress}
+            connectControl={
+              <button
+                type="button"
+                onClick={connectEvmWallet}
+                disabled={isConnectingEvm}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#a7ff10] px-3 text-sm font-black text-black transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isConnectingEvm ? (
+                  <Loader2 className="animate-spin" size={16} />
+                ) : (
+                  <Wallet size={16} />
+                )}
+                {isConnectingEvm ? "Checking..." : evmAddress ? "Reconnect" : "Connect"}
+              </button>
+            }
+            label="EVM wallet"
+            manualAddress={manualEvmAddress}
+            onCopy={onCopy}
+            onManualAddress={onManualEvmAddress}
+            placeholder="Paste EVM address override"
+          />
+          <WalletAccountCard
+            accent="blue"
+            activeAddress={activeSolanaAddress}
+            connectedAddress={solanaAddress}
+            connectControl={
+              <div className="solana-wallet-button wallet-inline-button">
+                <WalletMultiButton />
+              </div>
+            }
+            label="Solana wallet"
+            manualAddress={manualSolanaAddress}
+            onCopy={onCopy}
+            onManualAddress={onManualSolanaAddress}
+            placeholder="Paste Solana address override"
+          />
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -923,6 +972,11 @@ function navClass(active: boolean) {
 
 function chainLabel(chain: ChainId) {
   return CHAINS.find((item) => item.id === chain)?.shortLabel ?? chain;
+}
+
+function formatCompactAddress(address: string) {
+  if (address.length <= 14) return address;
+  return `${address.slice(0, 6)}...${address.slice(-6)}`;
 }
 
 function explorerUrl(item: UnifiedNft) {
