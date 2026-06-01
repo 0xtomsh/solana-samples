@@ -26,14 +26,14 @@ ALCHEMY_API_KEY=your_alchemy_api_key
 Run the app:
 
 ```bash
-pnpm dev:nft
+pnpm dev:nnv
 ```
 
 Build or typecheck:
 
 ```bash
-pnpm build:nft
-pnpm typecheck:nft
+pnpm build:nnv
+pnpm typecheck:nnv
 ```
 
 EVM NFTs are loaded with Alchemy NFT API. Solana NFTs are loaded with Alchemy DAS.
